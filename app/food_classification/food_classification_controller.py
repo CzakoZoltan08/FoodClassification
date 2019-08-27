@@ -1,15 +1,11 @@
 from flask import Blueprint, request
 from werkzeug.utils import secure_filename
 
-import tensorflow as tf
-
-from keras import backend as K
-
-from tensorflow.python.keras.backend import set_session
-
 from keras.models import model_from_json
 from keras.preprocessing.image import load_img
 
+import tensorflow as tf
+from tensorflow.python.keras.backend import set_session
 from tensorflow.python.keras.applications import ResNet50
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense
@@ -18,12 +14,8 @@ from os import path
 
 import numpy as np
 
+from flask import current_app as app
 
-# Checkpoint file name
-CHECKPOINT_FILE = 'best.hdf5'
-
-# Fixed for our Hot Dog & Pizza classes
-NUM_CLASSES = 2
 
 # Fixed for Hot Dog & Pizza color images
 CHANNELS = 3
@@ -108,32 +100,43 @@ def load_model():
     global graph
     global sess
 
-    model = Sequential()
+    if model is not None:
+        return "Model was already loaded!"
 
-    weights_file = path.join(
-        food_classification_module.root_path,
-        'static',
-        'resnet50_weights_notop.h5')
+    with graph.as_default():
 
-    model.add(ResNet50(include_top=False, pooling=RESNET50_POOLING_AVERAGE, weights=weights_file))
+        model = Sequential()
 
-    model.add(Dense(NUM_CLASSES, activation=DENSE_LAYER_ACTIVATION))
+        weights_file = path.join(
+            food_classification_module.root_path,
+            'static',
+            'resnet50_weights_notop.h5')
 
-    # Say not to train first layer (ResNet) model as it is already trained
-    model.layers[0].trainable = False
+        model.add(
+                ResNet50(
+                        include_top=False,
+                        pooling=RESNET50_POOLING_AVERAGE,
+                        weights=weights_file))
 
-    model.summary()
+        model.add(
+                Dense(
+                        app.config["NUM_CLASSES"],
+                        activation=DENSE_LAYER_ACTIVATION))
 
-    weights_path = path.join(
-        food_classification_module.root_path,
-        'static',
-        'best.hdf5')
+        # Say not to train first layer (ResNet) model as it is already trained
+        model.layers[0].trainable = False
 
-    set_session(sess)
-    model.load_weights(weights_path)
+        model.summary()
 
+        weights_path = path.join(
+            food_classification_module.root_path,
+            'static',
+            'best.hdf5')
 
-load_model()
+        set_session(sess)
+        model.load_weights(weights_path)
+
+    return "Model was loaded successfully!"
 
 
 @food_classification_module.route('/predict', methods=['POST'])

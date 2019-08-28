@@ -1,0 +1,11 @@
+Build the image:
+docker build -t food_classification .
+
+Run the image in a container
+docker run --name food_classification_container -p 8080:8080 food_classification
+
+Stop the running container
+docker stop food_classification_container
+
+Remove the container
+docker rm food_classification_container

@@ -9,3 +9,13 @@ docker stop food_classification_container
 
 Remove the container
 docker rm food_classification_container
+
+Create Image from the running container
+Steps:
+1. Commit  
+docker commit -m "my comment" -a "author name" food_classification_container desired_image_name
+ (docker image ls - to see all the images)
+2. Create Tag
+docker tag docker_image_name username/docker_hub_repo_name
+3. Push Image to DockerHub
+docker push username/docker_hub_repo_name
